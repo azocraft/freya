@@ -164,10 +164,16 @@ pub fn measure_emmitable_events<
                         );
                         emmitable_events.push(emmitable_event);
 
-                        // Only emit once for the deepest matching listener.
-                        if derived_event_name.is_emitted_once() {
-                            continue 'event;
-                        }
+                        // Always stop after the deepest matching listener
+                        // regardless of `is_emitted_once()`. Upstream defaults
+                        // `is_emitted_once = does_bubble`, and pointer events
+                        // return `does_bubble = false`, so a single hit fans
+                        // out to every ancestor's MouseDown/Click handler.
+                        // This fork enforces strict deepest-only delivery for
+                        // hit-tested pointer events; global events (keyboard,
+                        // file drops) take a different path via
+                        // `measure_source_global_events` and are unaffected.
+                        continue 'event;
                     }
                 }
 
